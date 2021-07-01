@@ -30,7 +30,10 @@ const buildHelpers = require(path.join(__dirname, '../helpers/build'))
 const dotenv = require('dotenv').config()
 const minify = require('rollup-plugin-terser').terser
 const license = require('rollup-plugin-license')
+const babel = require('@rollup/plugin-babel').babel
+const babelPresetTypescript = require('@babel/preset-typescript')
 const os = require('os')
+const extensions = ['.js', '.ts']
 
 module.exports = {
   plugins: [
@@ -53,8 +56,13 @@ module.exports = {
         '~': path.resolve(process.cwd(), 'node_modules/'),
       },
     }),
-    resolve({ mainFields: ['module', 'main', 'browser'] }),
+    resolve({ extensions, mainFields: ['module', 'main', 'browser'] }),
     commonjs({ sourceMap: false }),
+    babel({
+      presets: [[babelPresetTypescript]],
+      extensions,
+      babelHelpers: 'bundled',
+    }),
     (process.env.LNG_BUILD_MINIFY === 'true' || process.env.NODE_ENV === 'production') &&
       minify({ keep_fnames: true }),
     license({

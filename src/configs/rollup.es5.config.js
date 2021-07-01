@@ -22,7 +22,8 @@ const process = require('process')
 const babel = require('@rollup/plugin-babel').babel
 const resolve = require('@rollup/plugin-node-resolve').nodeResolve
 const commonjs = require('@rollup/plugin-commonjs')
-const babelPresentEnv = require('@babel/preset-env')
+const babelPresetEnv = require('@babel/preset-env')
+const babelPresetTypescript = require('@babel/preset-typescript')
 const babelPluginTransFormSpread = require('@babel/plugin-transform-spread')
 const babelPluginTransFormParameters = require('@babel/plugin-transform-parameters')
 const babelPluginClassProperties = require('@babel/plugin-proposal-class-properties')
@@ -36,6 +37,7 @@ const dotenv = require('dotenv').config()
 const minify = require('rollup-plugin-terser').terser
 const license = require('rollup-plugin-license')
 const os = require('os')
+const extensions = ['.js', '.ts']
 
 module.exports = {
   plugins: [
@@ -58,12 +60,12 @@ module.exports = {
         '~': path.resolve(process.cwd(), 'node_modules/'),
       },
     }),
-    resolve({ mainFields: ['module', 'main', 'browser'] }),
+    resolve({ extensions, mainFields: ['module', 'main', 'browser'] }),
     commonjs({ sourceMap: false }),
     babel({
       presets: [
         [
-          babelPresentEnv,
+          babelPresetEnv,
           {
             targets: {
               chrome: '39',
@@ -74,7 +76,10 @@ module.exports = {
             corejs: '^3.6.5',
           },
         ],
+        [babelPresetTypescript],
       ],
+      extensions,
+      babelHelpers: 'bundled',
       plugins: [
         babelPluginTransFormSpread,
         babelPluginTransFormParameters,

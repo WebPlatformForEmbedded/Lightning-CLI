@@ -176,11 +176,15 @@ const buildAppEsBuild = async (folder, metadata, type) => {
 const bundleAppRollup = (folder, metadata, type, options) => {
   spinner.start(`Building ${type.toUpperCase()} appBundle and saving to ${folder.split('/').pop()}`)
 
+  const enterFile = fs.existsSync(path.join(process.cwd(), 'src/index.ts'))
+    ? 'src/index.ts'
+    : 'src/index.js'
+
   const args = [
     '-c',
     path.join(__dirname, `../configs/rollup.${type}.config.js`),
     '--input',
-    path.join(process.cwd(), 'src/index.js'),
+    path.join(process.cwd(), enterFile),
     '--file',
     path.join(folder, type === 'es6' ? 'appBundle.js' : 'appBundle.es5.js'),
     '--name',

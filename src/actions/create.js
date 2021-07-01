@@ -79,6 +79,7 @@ const askConfig = () => {
     () => askAppId().then(appId => (config.appId = appId)),
     () => askAppFolder(config.appId).then(folder => (config.appFolder = folder)),
     () => askESlint().then(eslint => (config.eslint = eslint)),
+    () => askTypescript().then(ts => (config.typescript = ts)),
     () => config,
   ])
 }
@@ -90,6 +91,12 @@ const askInstall = config => {
     () => config,
   ])
 }
+
+const askTypescript = () =>
+  ask('Do you want to initialize project with TypeScript?', null, 'list', ['Yes', 'No']).then(
+    // map yes to true and no to false
+    val => val === 'Yes'
+  )
 
 /******* validations *******/
 
@@ -194,6 +201,32 @@ const addESlint = config => {
   return true
 }
 
+const addTypescript = config => {
+  fs.copySync(
+    path.join(__dirname, '../../fixtures/typescript/src'),
+    path.join(config.targetDir, 'src')
+  )
+
+  fs.removeSync(path.join(config.targetDir, 'src/App.js'))
+  fs.removeSync(path.join(config.targetDir, 'src/index.js'))
+
+  fs.writeFileSync(
+    path.join(config.targetDir, 'package.json'),
+    JSON.stringify(
+      {
+        ...JSON.parse(fs.readFileSync(path.join(config.targetDir, 'package.json'))),
+        ...JSON.parse(
+          fs.readFileSync(path.join(__dirname, '../../fixtures/typescript/package.json'))
+        ),
+      },
+      null,
+      2
+    )
+  )
+
+  return true
+}
+
 const createApp = config => {
   spinner.start('Creating Lightning App ' + config.appName)
   return sequence([
@@ -201,6 +234,7 @@ const createApp = config => {
     () => setAppData(config),
     () => setSdkVersion(config),
     () => config.eslint && addESlint(config),
+    () => config.typescript && addTypescript(config),
     () =>
       new Promise(resolve => {
         setTimeout(() => {
