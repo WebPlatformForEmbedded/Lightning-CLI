@@ -29,6 +29,14 @@ const spinner = require('./spinner')
 const isLocallyInstalled = require('./localinstallationcheck')
 const exit = require('./exit')
 
+const findFile = (parent, filePath) => {
+  const fullPath = path.join(parent, filePath)
+  if (fs.existsSync(fullPath)) {
+    return fullPath
+  }
+  return findFile(path.join(parent, '..'), filePath)
+}
+
 const removeFolder = folder => {
   spinner.start('Removing "' + folder.split('/').pop() + '" folder')
   shell.rm('-rf', folder)
@@ -44,11 +52,13 @@ const ensureFolderExists = folder => {
 const copySupportFiles = folder => {
   spinner.start('Copying support files to "' + folder.split('/').pop() + '"')
 
-  if (hasNewSDK()) {
-    shell.cp('-r', path.join(process.cwd(), 'node_modules/@lightningjs/sdk/support/*'), folder)
-  } else {
-    shell.cp('-r', path.join(process.cwd(), 'node_modules/wpe-lightning-sdk/support/*'), folder)
-  }
+  const nodeModulesPath = hasNewSDK()
+    ? 'node_modules/@lightningjs/sdk'
+    : 'node_modules/wpe-lightning-sdk'
+
+  const lightningSDKfolder = findFile(process.cwd(), nodeModulesPath)
+
+  shell.cp('-r', path.join(lightningSDKfolder, 'support/*'), folder)
 
   const command = process.argv.pop()
 
@@ -318,7 +328,8 @@ const getSdkVersion = () => {
   const packagePath = hasNewSDK()
     ? 'node_modules/@lightningjs/sdk'
     : 'node_modules/wpe-lightning-sdk'
-  return require(path.join(process.cwd(), packagePath, 'package.json')).version
+  const packageJsonPath = findFile(process.cwd(), packagePath)
+  return require(path.join(packageJsonPath, 'package.json')).version
 }
 
 const getCliVersion = () => {
